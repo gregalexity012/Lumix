@@ -103,12 +103,17 @@
             color: white;
         }
 
+        /* Ad Container Style */
+        .ad-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
         /* News Grid Styles */
         #news-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 25px;
-            margin-top: 20px;
         }
         .news-card {
             background-color: var(--card-bg-color);
@@ -171,6 +176,19 @@
         <button class="category-btn" data-category="entertainment">मनोरंजन</button>
     </nav>
 
+    <div class="ad-container">
+        <script type="text/javascript">
+            atOptions = {
+                'key' : '327a3e0b1905390aa5454a5b4e22e9ce',
+                'format' : 'iframe',
+                'height' : 50,
+                'width' : 320,
+                'params' : {}
+            };
+        </script>
+        <script type="text/javascript" src="//www.highperformanceformat.com/327a3e0b1905390aa5454a5b4e22e9ce/invoke.js"></script>
+    </div>
+
     <div class="container">
         <div id="news-container">
             <div id="loader">ताज़ा खबरें लोड हो रहीं हैं...</div>
@@ -178,7 +196,7 @@
     </div>
 
     <script>
-        const apiKey = 'da5a2262ca80335881aa607b2ec3d3ca';
+        const apiKey = 'da5a2262ca80335881aa607b2ec3d3ca'; // Remember to use your own API key
         const newsContainer = document.getElementById('news-container');
         const loader = document.getElementById('loader');
         const categoryNav = document.getElementById('category-nav');

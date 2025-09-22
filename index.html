@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumix News - आपकी दुनिया, आपकी खबरें</title>
+    
+    <style>
+        /* CSS Variables for Theming (Dark/Light Mode) */
+        :root {
+            --bg-color: #f4f4f4;
+            --card-bg-color: #ffffff;
+            --text-color: #333333;
+            --header-bg-color: #ffffff;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --link-color: #007bff;
+            --border-color: #ddd;
+        }
+
+        body.dark-mode {
+            --bg-color: #121212;
+            --card-bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --header-bg-color: #1e1e1e;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --link-color: #4dabf7;
+            --border-color: #444;
+        }
+
+        /* Basic Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--header-bg-color);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+            color: var(--link-color);
+        }
+
+        /* Features: Search and Dark Mode Toggle */
+        .features {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #search-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--card-bg-color);
+            color: var(--text-color);
+        }
+        #dark-mode-toggle {
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+        }
+
+        /* Category Navigation */
+        nav {
+            background-color: var(--card-bg-color);
+            padding: 10px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .category-btn {
+            margin: 0 10px;
+            padding: 8px 15px;
+            border: none;
+            background-color: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1em;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .category-btn:hover, .category-btn.active {
+            background-color: var(--link-color);
+            color: white;
+        }
+
+        /* News Grid Styles */
+        #news-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .news-card {
+            background-color: var(--card-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            overflow: hidden;
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+        .news-card:hover {
+            transform: translateY(-5px);
+        }
+        .news-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .news-card .content {
+            padding: 15px;
+            flex-grow: 1;
+        }
+        .news-card h2 {
+            font-size: 1.2em;
+            margin: 0 0 10px 0;
+        }
+        .news-card a {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--link-color);
+            font-weight: bold;
+            margin-top: auto;
+        }
+        
+        /* Loader and Message styles */
+        #loader {
+            text-align: center;
+            font-size: 1.5em;
+            padding: 50px;
+            grid-column: 1 / -1; /* Span full width */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Lumix News 📰</h1>
+        <div class="features">
+            <input type="search" id="search-input" placeholder="Search for news...">
+            <button id="dark-mode-toggle">🌙</button>
+        </div>
+    </header>
+
+    <nav id="category-nav">
+        <button class="category-btn active" data-category="general">मुख्य समाचार</button>
+        <button class="category-btn" data-category="business">व्यापार</button>
+        <button class="category-btn" data-category="technology">टेक्नोलॉजी</button>
+        <button class="category-btn" data-category="sports">खेल</button>
+        <button class="category-btn" data-category="health">स्वास्थ्य</button>
+        <button class="category-btn" data-category="entertainment">मनोरंजन</button>
+    </nav>
+
+    <div class="container">
+        <div id="news-container">
+            <div id="loader">ताज़ा खबरें लोड हो रहीं हैं...</div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = 'da5a2262ca80335881aa607b2ec3d3ca';
+        const newsContainer = document.getElementById('news-container');
+        const loader = document.getElementById('loader');
+        const categoryNav = document.getElementById('category-nav');
+        const searchInput = document.getElementById('search-input');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+        let currentCategory = 'general';
+
+        // --- News Fetching Functions ---
+
+        async function fetchAndDisplayNews(url) {
+            loader.style.display = 'block';
+            newsContainer.innerHTML = ''; // Clear previous articles
+            newsContainer.appendChild(loader);
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                loader.style.display = 'none';
+                displayNews(data.articles);
+
+            } catch (error) {
+                loader.innerText = 'खबरें लोड नहीं हो सकीं। कृपया बाद में प्रयास करें।';
+                console.error('Error fetching news:', error);
+            }
+        }
+
+        function getNews(category) {
+            currentCategory = category;
+            const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=hi&country=in&max=20&apikey=${apiKey}`;
+            fetchAndDisplayNews(url);
+            updateActiveCategory();
+        }
+
+        function searchNews(query) {
+            const url = `https://gnews.io/api/v4/search?q="${query}"&lang=hi&country=in&max=20&apikey=${apiKey}`;
+            fetchAndDisplayNews(url);
+            // Deselect all categories on search
+            document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        // --- UI Update Functions ---
+
+        function displayNews(articles) {
+            newsContainer.innerHTML = ''; // Clear loader
+            if (!articles || articles.length === 0) {
+                newsContainer.innerHTML = `<p style="text-align: center; grid-column: 1 / -1;">कोई खबर नहीं मिली।</p>`;
+                return;
+            }
+
+            articles.forEach(article => {
+                if (!article.image || !article.title) return;
+
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card';
+                newsCard.innerHTML = `
+                    <img src="${article.image}" alt="News Image">
+                    <div class="content">
+                        <h2>${article.title}</h2>
+                        <a href="${article.url}" target="_blank" rel="noopener noreferrer">पूरी खबर पढ़ें &rarr;</a>
+                    </div>
+                `;
+                newsContainer.appendChild(newsCard);
+            });
+        }
+        
+        function updateActiveCategory() {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.dataset.category === currentCategory) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+
+        categoryNav.addEventListener('click', (e) => {
+            if (e.target.classList.contains('category-btn')) {
+                const category = e.target.dataset.category;
+                getNews(category);
+            }
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                searchNews(searchInput.value.trim());
+            }
+        });
+        
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            // Save preference to localStorage
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+                darkModeToggle.textContent = '☀️';
+            } else {
+                localStorage.setItem('theme', 'light');
+                darkModeToggle.textContent = '🌙';
+            }
+        });
+        
+        // --- Initial Load ---
+        
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.textContent = '☀️';
+        }
+
+        // Fetch initial news on page load
+        getNews('general');
+
+    </script>
+
+</body>
+</html>
